@@ -1,6 +1,6 @@
 spring:
   application:
-    name: EuropeanDesigned-back
+    name: old-system
   datasource:
     url: jdbc:postgresql://localhost:5432/notedb
     username: postgres

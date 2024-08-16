@@ -1,5 +1,6 @@
 package com.old.system.notes.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -23,6 +24,7 @@ public class Notes {
 
     @ManyToOne
     @JoinColumn(name = "client_guid")
+    @JsonBackReference
     private Client client;
 
     public String getComments() {

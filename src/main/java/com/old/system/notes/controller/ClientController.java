@@ -1,7 +1,7 @@
 package com.old.system.notes.controller;
 
-import com.old.system.notes.model.dto.ClientDto;
-import com.old.system.notes.model.dto.NotesDto;
+import com.old.system.notes.model.Client;
+import com.old.system.notes.model.Notes;
 import com.old.system.notes.service.ClientService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,12 +18,12 @@ public class ClientController {
     private ClientService clientService;
 
     @GetMapping("/clients")
-    public List<ClientDto> getAllClients() {
+    public List<Client> getAllClients() {
         return clientService.getAllClients();
     }
 
     @GetMapping("/notes")
-    public List<NotesDto> getNotesByClientGuidAndAgencyAndCreatedDateTimeBetween(
+    public List<Notes> getNotesByClientGuidAndAgencyAndCreatedDateTimeBetween(
             @RequestParam String clientGuid,
             @RequestParam String agency,
             @RequestParam LocalDateTime dateFrom,

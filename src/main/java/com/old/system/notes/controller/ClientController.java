@@ -4,9 +4,7 @@ import com.old.system.notes.model.Client;
 import com.old.system.notes.model.Notes;
 import com.old.system.notes.service.ClientService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -14,8 +12,11 @@ import java.util.List;
 @RestController
 public class ClientController {
 
-    @Autowired
-    private ClientService clientService;
+    private final ClientService clientService;
+
+    public ClientController(ClientService clientService) {
+        this.clientService = clientService;
+    }
 
     @GetMapping("/clients")
     public List<Client> getAllClients() {
@@ -29,5 +30,35 @@ public class ClientController {
             @RequestParam LocalDateTime dateFrom,
             @RequestParam LocalDateTime dateTo) {
         return clientService.getNotesByClientGuidAndAgencyAndCreatedDateTimeBetween(clientGuid, agency, dateFrom, dateTo);
+    }
+
+    @PostMapping("/clients")
+    public Client createClient(@RequestBody Client client) {
+        return clientService.createClient(client);
+    }
+
+    @PostMapping("/clients/{clientGuid}/notes")
+    public Notes createNoteForClient(@PathVariable String clientGuid, @RequestBody Notes note) {
+        return clientService.createNoteForClient(clientGuid, note);
+    }
+
+    @PutMapping("/clients/{guid}")
+    public Client updateClient(@PathVariable String guid, @RequestBody Client client) {
+        return clientService.updateClient(guid, client);
+    }
+
+    @DeleteMapping("/clients/{guid}")
+    public void deleteClient(@PathVariable String guid) {
+        clientService.deleteClient(guid);
+    }
+
+    @PutMapping("/notes/{guid}")
+    public Notes updateNote(@PathVariable String guid, @RequestBody Notes note) {
+        return clientService.updateNote(guid, note);
+    }
+
+    @DeleteMapping("/notes/{guid}")
+    public void deleteNote(@PathVariable String guid) {
+        clientService.deleteNote(guid);
     }
 }

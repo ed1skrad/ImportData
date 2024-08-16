@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: EuropeanDesigned-back
+  datasource:
+    url: jdbc:postgresql://localhost:5432/notedb
+    username: postgres
+    password: aboba
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    database: postgresql
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          batch_size: 1000
+        order_inserts: true
+    open-in-view: false
+  config:
+    import: optional:secrets.properties[.properties]
+
+server:
+  port: 8081

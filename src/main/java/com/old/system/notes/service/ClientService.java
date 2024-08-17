@@ -4,7 +4,6 @@ import com.old.system.notes.model.Client;
 import com.old.system.notes.model.Notes;
 import com.old.system.notes.repository.ClientRepository;
 import com.old.system.notes.repository.NotesRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

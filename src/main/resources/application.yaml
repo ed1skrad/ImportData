@@ -16,5 +16,3 @@ spring:
           batch_size: 1000
         order_inserts: true
     open-in-view: false
-  config:
-    import: optional:secrets.properties[.properties]

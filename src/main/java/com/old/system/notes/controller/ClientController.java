@@ -3,7 +3,6 @@ package com.old.system.notes.controller;
 import com.old.system.notes.model.Client;
 import com.old.system.notes.model.Notes;
 import com.old.system.notes.service.ClientService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;

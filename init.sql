@@ -1,9 +1,9 @@
 INSERT INTO client (guid, agency, firstName, lastName, status, dob, createdDateTime) VALUES
-                                                                                         ('client1', 'AgencyA', 'John', 'Doe', 'Active', '1990-01-01', '2023-10-01T10:00:00'),
-                                                                                         ('client2', 'AgencyB', 'Jane', 'Smith', 'Active', '1985-05-15', '2023-10-02T11:00:00'),
-                                                                                         ('client3', 'AgencyA', 'Bob', 'Brown', 'Active', '1992-08-20', '2023-10-03T12:00:00'),
-                                                                                         ('client4', 'AgencyC', 'Alice', 'Johnson', 'Active', '1988-12-10', '2023-10-04T13:00:00'),
-                                                                                         ('client5', 'AgencyB', 'Charlie', 'Davis', 'Active', '1995-03-25', '2023-10-05T14:00:00');
+                                                                                         ('client1', 'AgencyA', 'John', 'Doe', 'ACTIVE', '1990-01-01', '2023-10-01T10:00:00'),
+                                                                                         ('client2', 'AgencyB', 'Jane', 'Smith', 'ACTIVE', '1985-05-15', '2023-10-02T11:00:00'),
+                                                                                         ('client3', 'AgencyA', 'Bob', 'Brown', 'ACTIVE', '1992-08-20', '2023-10-03T12:00:00'),
+                                                                                         ('client4', 'AgencyC', 'Alice', 'Johnson', 'ACTIVE', '1988-12-10', '2023-10-04T13:00:00'),
+                                                                                         ('client5', 'AgencyB', 'Charlie', 'Davis', 'INACTIVE', '1995-03-25', '2023-10-05T14:00:00');
 
 INSERT INTO old_notes (guid, comments, modifiedDateTime, clientGuid, dateTime, loggedUser, createdDateTime) VALUES
                                                                                                                 ('note1', 'First note for John Doe', '2023-10-01T10:05:00', 'client1', '2023-10-01T10:05:00', 'user1', '2023-10-01T10:05:00'),

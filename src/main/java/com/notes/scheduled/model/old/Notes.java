@@ -1,28 +1,41 @@
 package com.notes.scheduled.model.old;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "notes")
 public class Notes {
-
+    @NotEmpty
+    @Size(max = 500)
     private String comments;
 
     @Id
+    @NotEmpty
+    @Size(max = 50)
     private String guid;
 
+    @NotNull
     private LocalDateTime modifiedDateTime;
 
+    @NotNull
     private LocalDateTime dateTime;
 
+    @NotEmpty
+    @Size(max = 50)
     private String loggedUser;
 
+    @NotNull
     private LocalDateTime createdDateTime;
 
     @ManyToOne
     @JoinColumn(name = "client_guid")
+    @JsonBackReference
     private Client client;
 
     public String getComments() {

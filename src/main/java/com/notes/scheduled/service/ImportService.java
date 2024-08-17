@@ -10,7 +10,6 @@ import com.notes.scheduled.repository.PatientNoteRepository;
 import com.notes.scheduled.repository.PatientProfileRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -21,17 +20,20 @@ public class ImportService {
 
     private static final Logger logger = LoggerFactory.getLogger(ImportService.class);
 
-    @Autowired
-    private CompanyUserRepository companyUserRepository;
+    private final CompanyUserRepository companyUserRepository;
 
-    @Autowired
-    private PatientProfileRepository patientProfileRepository;
+    private final PatientProfileRepository patientProfileRepository;
 
-    @Autowired
-    private PatientNoteRepository patientNoteRepository;
+    private final PatientNoteRepository patientNoteRepository;
 
-    @Autowired
-    private RestTemplate restTemplate;
+    private final RestTemplate restTemplate;
+
+    public ImportService(CompanyUserRepository companyUserRepository, PatientProfileRepository patientProfileRepository, PatientNoteRepository patientNoteRepository, RestTemplate restTemplate) {
+        this.companyUserRepository = companyUserRepository;
+        this.patientProfileRepository = patientProfileRepository;
+        this.patientNoteRepository = patientNoteRepository;
+        this.restTemplate = restTemplate;
+    }
 
     @Scheduled(fixedRate = 10000)
     public void importData() {
@@ -42,7 +44,11 @@ public class ImportService {
 
             if (clients != null) {
                 for (Client client : clients) {
-                    importClient(client);
+                    if ("Active".equalsIgnoreCase(client.getStatus())) {
+                        importClient(client);
+                    } else {
+                        logger.info("Skipping client with guid: {} because status is not Active", client.getGuid());
+                    }
                 }
             }
 
@@ -55,15 +61,11 @@ public class ImportService {
     private void importClient(Client client) {
         Optional<PatientProfile> patientProfileOptional = patientProfileRepository.findByOldClientGuidContaining(client.getGuid());
         PatientProfile patientProfile;
-        if (patientProfileOptional.isPresent()) {
-            patientProfile = patientProfileOptional.get();
-        } else {
-            patientProfile = createPatientProfile(client);
-        }
+        patientProfile = patientProfileOptional.orElseGet(() -> createPatientProfile(client));
 
         if (client.getNotes() != null) {
             for (Notes note : client.getNotes()) {
-                importNote(client, note, patientProfile);
+                importNote(note, patientProfile);
             }
         }
     }
@@ -78,26 +80,18 @@ public class ImportService {
     }
 
     private Short getStatusId(String status) {
-        switch (status) {
-            case "Active":
-                return 200;
-            case "Inactive":
-                return 210;
-            case "Pending":
-                return 230;
-            default:
-                return 0;
-        }
+        return switch (status) {
+            case "ACTIVE" -> 200;
+            case "INACTIVE" -> 210;
+            case "PENDING" -> 230;
+            default -> 0;
+        };
     }
 
-    private void importNote(Client client, Notes note, PatientProfile patientProfile) {
+    private void importNote(Notes note, PatientProfile patientProfile) {
         Optional<CompanyUser> companyUserOptional = companyUserRepository.findByLogin(note.getLoggedUser());
         CompanyUser companyUser;
-        if (companyUserOptional.isPresent()) {
-            companyUser = companyUserOptional.get();
-        } else {
-            companyUser = createCompanyUser(note.getLoggedUser());
-        }
+        companyUser = companyUserOptional.orElseGet(() -> createCompanyUser(note.getLoggedUser()));
 
         Optional<PatientNote> existingNoteOptional = patientNoteRepository.findByNoteAndPatientId(note.getComments(), patientProfile.getId());
         PatientNote patientNote;
@@ -137,3 +131,4 @@ public class ImportService {
         }
     }
 }
+

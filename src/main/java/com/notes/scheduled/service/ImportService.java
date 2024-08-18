@@ -19,6 +19,8 @@ import java.util.stream.Stream;
 @Service
 public class ImportService {
 
+    private static final String ACTIVE_STATUS = "ACTIVE";
+
     private final CompanyUserRepository companyUserRepository;
     private final PatientProfileRepository patientProfileRepository;
     private final PatientNoteRepository patientNoteRepository;
@@ -37,7 +39,7 @@ public class ImportService {
 
         if (clients != null) {
             List<String> activeGuids = Stream.of(clients)
-                    .filter(client -> "ACTIVE".equalsIgnoreCase(client.getStatus()))
+                    .filter(client -> ACTIVE_STATUS.equalsIgnoreCase(client.getStatus()))
                     .map(Client::getGuid)
                     .toList();
 
@@ -49,7 +51,7 @@ public class ImportService {
             deleteInactiveProfiles(inactiveProfiles);
 
             for (Client client : clients) {
-                if ("ACTIVE".equalsIgnoreCase(client.getStatus())) {
+                if (ACTIVE_STATUS.equalsIgnoreCase(client.getStatus())) {
                     importClient(client);
                 }
             }
@@ -115,10 +117,9 @@ public class ImportService {
         }
     }
 
-
     public Short getStatusId(String status) {
         return switch (status) {
-            case "ACTIVE" -> 200;
+            case ACTIVE_STATUS -> 200;
             case "INACTIVE" -> 210;
             case "PENDING" -> 230;
             default -> 0;

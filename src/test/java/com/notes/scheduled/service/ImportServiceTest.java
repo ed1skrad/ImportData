@@ -17,6 +17,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -181,5 +182,58 @@ class ImportServiceTest {
 
         assertEquals("test_user", user.getLogin());
         verify(companyUserRepository).save(user);
+    }
+
+    @Test
+    void testImportClientWithNotes() {
+        Client client = new Client();
+        client.setGuid("guid1");
+        client.setFirstName("John");
+        client.setLastName("Doe");
+        client.setStatus("ACTIVE");
+
+        Notes note1 = new Notes();
+        note1.setComments("note1");
+        note1.setGuid("note1-guid");
+        note1.setModifiedDateTime(LocalDateTime.now());
+        note1.setDateTime(LocalDateTime.now());
+        note1.setLoggedUser("user1");
+        note1.setCreatedDateTime(LocalDateTime.now());
+
+        Notes note2 = new Notes();
+        note2.setComments("note2");
+        note2.setGuid("note2-guid");
+        note2.setModifiedDateTime(LocalDateTime.now());
+        note2.setDateTime(LocalDateTime.now());
+        note2.setLoggedUser("user2");
+        note2.setCreatedDateTime(LocalDateTime.now());
+
+        client.setNotes(Arrays.asList(note1, note2));
+
+        PatientProfile patientProfile = new PatientProfile();
+        patientProfile.setId(1L);
+        patientProfile.setFirstName("John");
+        patientProfile.setLastName("Doe");
+        patientProfile.setOldClientGuid("guid1");
+        patientProfile.setStatusId((short) 200);
+
+        CompanyUser companyUser1 = new CompanyUser();
+        companyUser1.setLogin("user1");
+
+        CompanyUser companyUser2 = new CompanyUser();
+        companyUser2.setLogin("user2");
+
+        when(patientProfileRepository.findByOldClientGuidContaining("guid1")).thenReturn(Optional.of(patientProfile));
+        when(companyUserRepository.findByLogin("user1")).thenReturn(Optional.of(companyUser1));
+        when(companyUserRepository.findByLogin("user2")).thenReturn(Optional.of(companyUser2));
+        when(patientNoteRepository.findByNoteAndPatientId(anyString(), anyLong())).thenReturn(Optional.empty());
+
+        importService.importClient(client);
+
+        verify(patientProfileRepository, times(1)).findByOldClientGuidContaining("guid1");
+        verify(companyUserRepository, times(1)).findByLogin("user1");
+        verify(companyUserRepository, times(1)).findByLogin("user2");
+        verify(patientNoteRepository, times(2)).findByNoteAndPatientId(anyString(), anyLong());
+        verify(patientNoteRepository, times(2)).save(any(PatientNote.class));
     }
 }

@@ -4,6 +4,8 @@ import com.notes.scheduled.model.PatientNote;
 import com.notes.scheduled.model.PatientProfile;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -12,11 +14,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Component
 public class ImportServiceAspect {
 
-    private final AtomicInteger importedProfiles = new AtomicInteger(0);
-    private final AtomicInteger updatedProfiles = new AtomicInteger(0);
-    private final AtomicInteger deletedProfiles = new AtomicInteger(0);
-    private final AtomicInteger importedNotes = new AtomicInteger(0);
-    private final AtomicInteger updatedNotes = new AtomicInteger(0);
+    private static final Logger logger = LoggerFactory.getLogger(ImportServiceAspect.class);
+
+    final AtomicInteger importedProfiles = new AtomicInteger(0);
+    final AtomicInteger updatedProfiles = new AtomicInteger(0);
+    final AtomicInteger deletedProfiles = new AtomicInteger(0);
+    final AtomicInteger importedNotes = new AtomicInteger(0);
+    final AtomicInteger updatedNotes = new AtomicInteger(0);
 
     @Pointcut("execution(* com.notes.scheduled.repository.PatientProfileRepository.save(..))")
     public void savePatientProfile() {}
@@ -35,8 +39,7 @@ public class ImportServiceAspect {
 
     @AfterReturning("savePatientProfile()")
     public void afterSavePatientProfile(JoinPoint joinPoint) {
-        if (joinPoint.getArgs()[0] instanceof PatientProfile) {
-            PatientProfile profile = (PatientProfile) joinPoint.getArgs()[0];
+        if (joinPoint.getArgs()[0] instanceof PatientProfile profile) {
             if (profile.getId() == null) {
                 importedProfiles.incrementAndGet();
                 log(joinPoint, "Patient profile imported.");
@@ -55,8 +58,7 @@ public class ImportServiceAspect {
 
     @AfterReturning("savePatientNote()")
     public void afterSavePatientNote(JoinPoint joinPoint) {
-        if (joinPoint.getArgs()[0] instanceof PatientNote) {
-            PatientNote note = (PatientNote) joinPoint.getArgs()[0];
+        if (joinPoint.getArgs()[0] instanceof PatientNote note) {
             if (note.getId() == null) {
                 importedNotes.incrementAndGet();
                 log(joinPoint, "Patient note imported.");
@@ -94,6 +96,6 @@ public class ImportServiceAspect {
     }
 
     private void log(JoinPoint joinPoint, String message) {
-        System.out.println("[" + joinPoint.getSignature().getName() + "] " + message);
+        logger.info("[{}] {}", joinPoint.getSignature().getName(), message);
     }
 }

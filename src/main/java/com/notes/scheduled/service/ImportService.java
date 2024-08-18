@@ -13,7 +13,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ImportService {
@@ -21,11 +24,8 @@ public class ImportService {
     private static final Logger logger = LoggerFactory.getLogger(ImportService.class);
 
     private final CompanyUserRepository companyUserRepository;
-
     private final PatientProfileRepository patientProfileRepository;
-
     private final PatientNoteRepository patientNoteRepository;
-
     private final RestTemplate restTemplate;
 
     public ImportService(CompanyUserRepository companyUserRepository, PatientProfileRepository patientProfileRepository, PatientNoteRepository patientNoteRepository, RestTemplate restTemplate) {
@@ -43,8 +43,30 @@ public class ImportService {
             Client[] clients = restTemplate.getForObject("http://localhost:8080/clients", Client[].class);
 
             if (clients != null) {
+                List<String> activeGuids = List.of(clients)
+                        .stream()
+                        .filter(client -> "ACTIVE".equalsIgnoreCase(client.getStatus()))
+                        .map(Client::getGuid)
+                        .collect(Collectors.toList());
+
+                // Удаление неактивных профилей и связанных заметок
+                List<PatientProfile> inactiveProfiles = patientProfileRepository.findAll()
+                        .stream()
+                        .filter(profile -> !activeGuids.contains(profile.getOldClientGuid()))
+                        .collect(Collectors.toList());
+
+                for (PatientProfile profile : inactiveProfiles) {
+                    // Удаление связанных заметок
+                    List<PatientNote> notes = patientNoteRepository.findByPatientId(profile.getId());
+                    patientNoteRepository.deleteAll(notes);
+
+                    // Удаление профиля пациента
+                    patientProfileRepository.delete(profile);
+                    logger.info("Deleted inactive patient profile with oldClientGuid: {}", profile.getOldClientGuid());
+                }
+
                 for (Client client : clients) {
-                    if ("Active".equalsIgnoreCase(client.getStatus())) {
+                    if ("ACTIVE".equalsIgnoreCase(client.getStatus())) {
                         importClient(client);
                     } else {
                         logger.info("Skipping client with guid: {} because status is not Active", client.getGuid());
@@ -61,7 +83,13 @@ public class ImportService {
     private void importClient(Client client) {
         Optional<PatientProfile> patientProfileOptional = patientProfileRepository.findByOldClientGuidContaining(client.getGuid());
         PatientProfile patientProfile;
-        patientProfile = patientProfileOptional.orElseGet(() -> createPatientProfile(client));
+
+        if (patientProfileOptional.isPresent()) {
+            patientProfile = patientProfileOptional.get();
+            updatePatientProfile(patientProfile, client);
+        } else {
+            patientProfile = createPatientProfile(client);
+        }
 
         if (client.getNotes() != null) {
             for (Notes note : client.getNotes()) {
@@ -77,6 +105,13 @@ public class ImportService {
         patientProfile.setOldClientGuid(client.getGuid());
         patientProfile.setStatusId(getStatusId(client.getStatus()));
         return patientProfileRepository.save(patientProfile);
+    }
+
+    private void updatePatientProfile(PatientProfile patientProfile, Client client) {
+        patientProfile.setFirstName(client.getFirstName());
+        patientProfile.setLastName(client.getLastName());
+        patientProfile.setStatusId(getStatusId(client.getStatus()));
+        patientProfileRepository.save(patientProfile);
     }
 
     private Short getStatusId(String status) {
@@ -100,10 +135,9 @@ public class ImportService {
             updatePatientNote(patientNote, note, companyUser);
         } else {
             patientNote = createPatientNote(note, patientProfile, companyUser);
+            patientNoteRepository.save(patientNote);
+            logger.info("Imported note with guid: {}", note.getGuid());
         }
-
-        patientNoteRepository.save(patientNote);
-        logger.info("Imported note with guid: {}", note.getGuid());
     }
 
     private CompanyUser createCompanyUser(String login) {
@@ -128,7 +162,8 @@ public class ImportService {
             patientNote.setNote(note.getComments());
             patientNote.setLastModifiedDateTime(note.getModifiedDateTime());
             patientNote.setLastModifiedByUser(companyUser);
+            patientNoteRepository.save(patientNote);
+            logger.info("Updated note with guid: {}", note.getGuid());
         }
     }
 }
-

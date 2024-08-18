@@ -31,7 +31,7 @@ public class ImportService {
         this.restTemplate = restTemplate;
     }
 
-    @Scheduled(fixedRate = 10000)
+    @Scheduled(cron = "0 15 1/2 * * *")
     public void importData() {
         Client[] clients = restTemplate.getForObject("http://localhost:8080/clients", Client[].class);
 

@@ -8,7 +8,9 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     database: postgresql
-    show-sql: true
+    hibernate:
+      ddl-auto: create
+    show-sql: false
     properties:
       hibernate:
         format_sql: true
